@@ -1,0 +1,24 @@
+[project]
+name = "analytics-mcp-server"
+version = "0.1.0"
+description = "MCP server for Pokemon analytics and comparisons"
+authors = [
+    { name = "Pokemon Analytics Team" }
+]
+dependencies = [
+    "fastmcp==2.11.3",
+    "httpx>=0.25.0",
+]
+requires-python = ">=3.10"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
