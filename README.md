@@ -234,58 +234,18 @@ uv run server.py
 ### Iniciar Agentes
 ```bash
 # Terminal 3 - Pokemon Agent
-cd pokemon_agent
 uv run uvicorn pokemon_agent.agent:a2a_app --host localhost --port 10001
 
 # Terminal 4 - Pokedex Assistant
-cd pokedex_assistant  
 uv run uvicorn pokedex_assistant.agent:a2a_app --host localhost --port 10002
 
 # Terminal 5 - Master Agent
-cd master-agent
 uv run adk web
 ```
 
 ## 📝 Ejemplos de Uso
 
-### Consulta Básica - Pokemon Agent
-```python
-# Información básica
-"Tell me about Pikachu"
-→ Stats, types, abilities, sprite
-
-# Búsqueda
-"Show me the first 10 Pokemon" 
-→ Lista paginada con IDs y nombres
-
-# Especies
-"What's the description of Charizard?"
-→ Flavor text, habitat, generation
-```
-
-### Análisis Avanzado - Pokedex Assistant
-```python
-# Comparación estadística
-"Compare Charizard vs Blastoise"
-→ Análisis detallado de stats base, winner por categoría
-
-# Efectividad de tipos
-"How effective is Electric against Water/Flying?"
-→ Multiplicadores, descripciones, estrategia de batalla
-
-# Trivia educativa
-"Generate interesting facts about Alakazam"
-→ Stats destacados, curiosidades, datos Pokedex
-```
-
-### Colaboración A2A
-```python
-# Análisis colaborativo automático
-"I want a complete analysis of Dragonite vs Salamence"
-→ Pokemon Agent: datos básicos
-→ Pokedex Assistant: comparación detallada  
-→ Resultado: análisis completo enriquecido
-```
+![alt text](images/image.png)
 
 ## 🧪 Testing y Demos
 
