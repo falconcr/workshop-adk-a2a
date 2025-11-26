@@ -92,64 +92,6 @@ agent_card = AgentCard(
     skills=[pokemon_info_skill, pokemon_species_skill, pokemon_search_skill],
 )
 
-# A2A Agent Discovery and Communication
-class PokemonAgentA2A:
-    """Enhanced Pokemon Agent with A2A communication capabilities."""
-    
-    def __init__(self, base_agent: LlmAgent):
-        self.base_agent = base_agent
-        self.assistant_agent: Optional[RemoteA2aAgent] = None
-        self.assistant_url = os.getenv("ASSISTANT_AGENT_URL", "http://localhost:10002")
-        
-    async def discover_assistant_agent(self):
-        """Discover and connect to the Pokédx Assistant Agent."""
-        try:
-            logger.info(f"🔍 Discovering Pokédx Assistant Agent at {self.assistant_url}")
-            self.assistant_agent = RemoteA2aAgent(url=self.assistant_url)
-            logger.info("✅ Successfully connected to Pokédx Assistant Agent")
-            return True
-        except Exception as e:
-            logger.warning(f"⚠️ Could not connect to Pokédx Assistant Agent: {e}")
-            return False
-    
-    async def request_pokemon_comparison(self, pokemon1: str, pokemon2: str) -> str:
-        """Request a Pokemon comparison from the Assistant Agent."""
-        if not self.assistant_agent:
-            await self.discover_assistant_agent()
-        
-        if self.assistant_agent:
-            try:
-                logger.info(f"📊 Requesting comparison: {pokemon1} vs {pokemon2}")
-                result = await self.assistant_agent.execute_task(
-                    f"Compare {pokemon1} and {pokemon2} stats in detail"
-                )
-                return result
-            except Exception as e:
-                logger.error(f"❌ Failed to get comparison: {e}")
-                return f"I couldn't get the comparison from the assistant agent. Error: {e}"
-        
-        return "The Pokédx Assistant Agent is not available for comparisons right now."
-    
-    async def request_pokemon_trivia(self, pokemon_name: str) -> str:
-        """Request Pokemon trivia from the Assistant Agent."""
-        if not self.assistant_agent:
-            await self.discover_assistant_agent()
-        
-        if self.assistant_agent:
-            try:
-                logger.info(f"🎯 Requesting trivia for: {pokemon_name}")
-                result = await self.assistant_agent.execute_task(
-                    f"Generate interesting trivia and facts about {pokemon_name}"
-                )
-                return result
-            except Exception as e:
-                logger.error(f"❌ Failed to get trivia: {e}")
-                return f"I couldn't get trivia from the assistant agent. Error: {e}"
-        
-        return "The Pokédx Assistant Agent is not available for trivia right now."
-
-# Create enhanced agent with A2A capabilities
-pokemon_a2a = PokemonAgentA2A(root_agent)
 
 # Make the agent A2A-compatible
 a2a_app = to_a2a(root_agent, port=port)
