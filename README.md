@@ -249,6 +249,15 @@ uv run adk web
 
 ## 🧪 Testing y Demos
 
+### Test Pokedx Assistant
+
+```bash
+cd pokedex_assistant  
+uv run test_client.py
+```
+
+![alt text](images/test-client-pokedex-agent.png)
+
 
 ### Workflows Disponibles:
 1. **Individual Agent Queries** - Consultas directas a cada agente
