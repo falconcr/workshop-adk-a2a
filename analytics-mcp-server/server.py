@@ -249,6 +249,214 @@ class PokemonAnalytics:
             rankings["note"] += f" Stat '{stat_name}' not found in sample data."
         
         return rankings
+    
+    async def build_pokemon_team(self, strategy: str = "balanced", team_size: int = 6) -> Dict[str, Any]:
+        """Build a strategic Pokemon team based on specified criteria."""
+        strategies = {
+            "balanced": {
+                "description": "A well-rounded team with good type coverage and stat distribution",
+                "pokemon": [
+                    {"name": "Garchomp", "role": "Physical Sweeper", "types": ["Ground", "Dragon"]},
+                    {"name": "Rotom-Wash", "role": "Tank/Utility", "types": ["Electric", "Water"]},
+                    {"name": "Ferrothorn", "role": "Physical Wall", "types": ["Grass", "Steel"]},
+                    {"name": "Latios", "role": "Special Sweeper", "types": ["Dragon", "Psychic"]},
+                    {"name": "Scizor", "role": "Priority Attacker", "types": ["Bug", "Steel"]},
+                    {"name": "Gliscor", "role": "Physical Wall", "types": ["Ground", "Flying"]}
+                ]
+            },
+            "offensive": {
+                "description": "High-damage team focused on overwhelming opponents",
+                "pokemon": [
+                    {"name": "Salamence", "role": "Special Sweeper", "types": ["Dragon", "Flying"]},
+                    {"name": "Metagross", "role": "Physical Sweeper", "types": ["Steel", "Psychic"]},
+                    {"name": "Gengar", "role": "Special Sweeper", "types": ["Ghost", "Poison"]},
+                    {"name": "Lucario", "role": "Mixed Attacker", "types": ["Fighting", "Steel"]},
+                    {"name": "Dragonite", "role": "Physical Sweeper", "types": ["Dragon", "Flying"]},
+                    {"name": "Alakazam", "role": "Special Sweeper", "types": ["Psychic"]}
+                ]
+            },
+            "defensive": {
+                "description": "Tanky team designed to outlast opponents",
+                "pokemon": [
+                    {"name": "Blissey", "role": "Special Wall", "types": ["Normal"]},
+                    {"name": "Skarmory", "role": "Physical Wall", "types": ["Steel", "Flying"]},
+                    {"name": "Toxapex", "role": "Special Wall", "types": ["Poison", "Water"]},
+                    {"name": "Hippowdon", "role": "Physical Wall", "types": ["Ground"]},
+                    {"name": "Celesteela", "role": "Mixed Wall", "types": ["Steel", "Flying"]},
+                    {"name": "Chansey", "role": "Special Wall", "types": ["Normal"]}
+                ]
+            }
+        }
+        
+        if strategy not in strategies:
+            return {"error": f"Strategy '{strategy}' not found. Available: {', '.join(strategies.keys())}"}
+        
+        team = strategies[strategy]
+        team["team_size"] = min(team_size, len(team["pokemon"]))
+        team["selected_pokemon"] = team["pokemon"][:team_size]
+        
+        # Calculate type coverage
+        all_types = []
+        for pokemon in team["selected_pokemon"]:
+            all_types.extend(pokemon["types"])
+        
+        team["type_coverage"] = list(set(all_types))
+        team["strategy"] = strategy
+        
+        return team
+    
+    async def analyze_team_composition(self, pokemon_list: List[str]) -> Dict[str, Any]:
+        """Analyze the composition and strategic value of a given team."""
+        if not pokemon_list:
+            return {"error": "No Pokemon provided for analysis"}
+        
+        team_data = []
+        all_types = []
+        
+        for pokemon_name in pokemon_list:
+            pokemon_data = await self.get_pokemon_data(pokemon_name)
+            if pokemon_data:
+                types = [t['type']['name'] for t in pokemon_data['types']]
+                stats = {stat['stat']['name']: stat['base_stat'] for stat in pokemon_data['stats']}
+                
+                team_data.append({
+                    "name": pokemon_data['name'].title(),
+                    "types": types,
+                    "stats": stats,
+                    "total_stats": sum(stats.values())
+                })
+                all_types.extend(types)
+        
+        if not team_data:
+            return {"error": "Could not retrieve data for any of the provided Pokemon"}
+        
+        # Analyze composition
+        analysis = {
+            "team_size": len(team_data),
+            "pokemon": team_data,
+            "type_coverage": list(set(all_types)),
+            "type_distribution": {},
+            "stat_analysis": {},
+            "strengths": [],
+            "weaknesses": []
+        }
+        
+        # Type distribution
+        for type_name in all_types:
+            analysis["type_distribution"][type_name] = all_types.count(type_name)
+        
+        # Stat analysis
+        if team_data:
+            avg_stats = {}
+            for stat_name in team_data[0]["stats"].keys():
+                stat_values = [pokemon["stats"][stat_name] for pokemon in team_data]
+                avg_stats[stat_name] = {
+                    "average": round(sum(stat_values) / len(stat_values), 1),
+                    "highest": max(stat_values),
+                    "lowest": min(stat_values)
+                }
+            analysis["stat_analysis"] = avg_stats
+        
+        # Basic strengths/weaknesses analysis
+        type_count = len(analysis["type_coverage"])
+        if type_count >= 10:
+            analysis["strengths"].append("Excellent type coverage")
+        elif type_count >= 6:
+            analysis["strengths"].append("Good type coverage")
+        else:
+            analysis["weaknesses"].append("Limited type coverage")
+        
+        avg_total = sum(p["total_stats"] for p in team_data) / len(team_data)
+        if avg_total >= 500:
+            analysis["strengths"].append("High overall stats")
+        elif avg_total <= 400:
+            analysis["weaknesses"].append("Below average stats")
+        
+        return analysis
+    
+    async def suggest_team_improvements(self, current_team: List[str], strategy: str = "balanced") -> Dict[str, Any]:
+        """Suggest improvements to an existing team based on analysis."""
+        analysis = await self.analyze_team_composition(current_team)
+        
+        if "error" in analysis:
+            return analysis
+        
+        suggestions = {
+            "current_analysis": analysis,
+            "recommendations": [],
+            "suggested_replacements": [],
+            "strategy_focus": strategy
+        }
+        
+        # Analyze weaknesses and provide suggestions
+        if "Limited type coverage" in analysis.get("weaknesses", []):
+            suggestions["recommendations"].append("Add Pokemon with different types to improve coverage")
+            suggestions["suggested_replacements"].append({
+                "reason": "Type diversity",
+                "suggestions": ["Garchomp (Ground/Dragon)", "Rotom (Electric/Water)", "Ferrothorn (Grass/Steel)"]
+            })
+        
+        if "Below average stats" in analysis.get("weaknesses", []):
+            suggestions["recommendations"].append("Consider replacing weaker Pokemon with stronger alternatives")
+            suggestions["suggested_replacements"].append({
+                "reason": "Stat improvement",
+                "suggestions": ["Metagross", "Salamence", "Tyranitar", "Garchomp"]
+            })
+        
+        # Strategy-specific suggestions
+        if strategy == "offensive" and analysis["stat_analysis"].get("attack", {}).get("average", 0) < 100:
+            suggestions["recommendations"].append("Add more high-attack Pokemon for offensive strategy")
+        
+        if strategy == "defensive" and analysis["stat_analysis"].get("hp", {}).get("average", 0) < 90:
+            suggestions["recommendations"].append("Add more high-HP Pokemon for defensive strategy")
+        
+        if not suggestions["recommendations"]:
+            suggestions["recommendations"].append("Team composition looks solid! Consider testing different movesets.")
+        
+        return suggestions
+    
+    async def calculate_team_coverage(self, pokemon_list: List[str]) -> Dict[str, Any]:
+        """Calculate type coverage and effectiveness for a team."""
+        team_types = []
+        pokemon_data = []
+        
+        for pokemon_name in pokemon_list:
+            data = await self.get_pokemon_data(pokemon_name)
+            if data:
+                types = [t['type']['name'] for t in data['types']]
+                team_types.extend(types)
+                pokemon_data.append({
+                    "name": data['name'].title(),
+                    "types": types
+                })
+        
+        if not pokemon_data:
+            return {"error": "Could not retrieve data for any Pokemon"}
+        
+        unique_types = list(set(team_types))
+        
+        coverage = {
+            "team_pokemon": pokemon_data,
+            "offensive_types": unique_types,
+            "type_coverage_score": len(unique_types),
+            "max_possible_coverage": 18,  # Total number of types
+            "coverage_percentage": round((len(unique_types) / 18) * 100, 1),
+            "recommendations": []
+        }
+        
+        # Common type gaps to check
+        important_types = ["Fire", "Water", "Grass", "Electric", "Ice", "Fighting", "Flying", "Ground"]
+        missing_important = [t for t in important_types if t not in unique_types]
+        
+        if missing_important:
+            coverage["recommendations"].append(f"Consider adding Pokemon with these important types: {', '.join(missing_important)}")
+        
+        if len(unique_types) < 6:
+            coverage["recommendations"].append("Team has limited type diversity - consider adding Pokemon with different types")
+        elif len(unique_types) >= 12:
+            coverage["recommendations"].append("Excellent type coverage! Team can handle most matchups")
+        
+        return coverage
 
 # Create FastMCP instance
 mcp = FastMCP("Analytics MCP Server 🔬")
@@ -336,9 +544,90 @@ async def get_stat_rankings(
     return result
 
 
+@mcp.tool()
+async def build_pokemon_team(
+    strategy: str = "balanced",
+    team_size: int = 6,
+):
+    """Build a strategic Pokemon team based on specified criteria.
+    
+    Args:
+        strategy: Team strategy ('balanced', 'offensive', 'defensive')
+        team_size: Number of Pokemon in the team (1-6, default: 6)
+        
+    Returns:
+        A strategically designed Pokemon team with roles and analysis.
+    """
+    logger.info(f"--- 🛠️ Tool: build_pokemon_team called for {strategy} strategy with {team_size} Pokemon ---")
+    
+    result = await analytics.build_pokemon_team(strategy, team_size)
+    logger.info(f"✅ Team building result: {result}")
+    return result
+
+
+@mcp.tool()
+async def analyze_team_composition(
+    pokemon_list: List[str],
+):
+    """Analyze the composition and strategic value of a given team.
+    
+    Args:
+        pokemon_list: List of Pokemon names to analyze as a team
+        
+    Returns:
+        Detailed analysis of team composition, strengths, and weaknesses.
+    """
+    logger.info(f"--- 🛠️ Tool: analyze_team_composition called for team: {pokemon_list} ---")
+    
+    result = await analytics.analyze_team_composition(pokemon_list)
+    logger.info(f"✅ Team analysis result: {result}")
+    return result
+
+
+@mcp.tool()
+async def suggest_team_improvements(
+    current_team: List[str],
+    strategy: str = "balanced",
+):
+    """Suggest improvements to an existing team based on analysis.
+    
+    Args:
+        current_team: List of current Pokemon in the team
+        strategy: Desired strategy for improvements ('balanced', 'offensive', 'defensive')
+        
+    Returns:
+        Suggestions for improving the team composition and strategy.
+    """
+    logger.info(f"--- 🛠️ Tool: suggest_team_improvements called for team: {current_team} with {strategy} strategy ---")
+    
+    result = await analytics.suggest_team_improvements(current_team, strategy)
+    logger.info(f"✅ Team improvement suggestions: {result}")
+    return result
+
+
+@mcp.tool()
+async def calculate_team_coverage(
+    pokemon_list: List[str],
+):
+    """Calculate type coverage and effectiveness for a team.
+    
+    Args:
+        pokemon_list: List of Pokemon names to calculate coverage for
+        
+    Returns:
+        Type coverage analysis and recommendations for the team.
+    """
+    logger.info(f"--- 🛠️ Tool: calculate_team_coverage called for team: {pokemon_list} ---")
+    
+    result = await analytics.calculate_team_coverage(pokemon_list)
+    logger.info(f"✅ Team coverage result: {result}")
+    return result
+
+
 if __name__ == "__main__":
     logger.info(f"🔬 Analytics MCP server started on port {os.getenv('PORT', 8081)}")
     logger.info("Available tools: compare_pokemon_stats, calculate_type_effectiveness, generate_pokemon_trivia, get_stat_rankings")
+    logger.info("Team building tools: build_pokemon_team, analyze_team_composition, suggest_team_improvements, calculate_team_coverage")
     asyncio.run(
         mcp.run_async(
             transport="http",
