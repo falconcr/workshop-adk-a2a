@@ -247,7 +247,23 @@ uv run adk web
 
 ![alt text](images/image.png)
 
+### CRear un equipo
+
+![alt text](images/build-pokemon-team.png)
+
 ## 🧪 Testing y Demos
+
+```bash
+# Test Pokemon Agent
+cd pokemon_agent
+uv run test_client.py
+
+# Test Pokedx Assistant
+cd pokedex_assistant  
+uv run test_client.py
+```
+
+![alt text](images/test-client-pokedex-agent.png)
 
 ### Test Pokedx Assistant
 

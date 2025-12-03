@@ -333,6 +333,16 @@ uv run adk web
 "What are some curious facts about legendary Pokemon?"
 ```
 
+## Uses case
+
+## 📝 Ejemplos de Uso
+
+![alt text](images/image.png)
+
+### Build a team
+
+![alt text](images/build-pokemon-team.png)
+
 ## 🧪 Testing and Demos
 
 ### Test Individual Agents
