@@ -190,6 +190,18 @@ python --version
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
+### Login google cloud
+
+```bash
+gcloud auth login
+
+gcloud config set project [ID_DE_TU_PROYECTO]
+
+# Si necesitas verificar qué cuenta está activa o qué proyecto está configurado, puedes usar:
+gcloud auth list
+gcloud config list
+```
+
 ### Instalación
 ```bash
 # Clonar proyecto
